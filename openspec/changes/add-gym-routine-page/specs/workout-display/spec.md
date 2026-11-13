@@ -32,7 +32,7 @@ Each exercise SHALL show its name in serif (`--fs-body`, `--ink`) on one line an
 - **THEN** it wraps within the column without overflowing into the next
 
 ### Requirement: Desktop no-scroll layout
-At viewport widths ≥ 900px the page SHALL show the headline and the four side-by-side columns as one block centered vertically and horizontally on the screen, with "Tired?" centered at the bottom, with no vertical scroll at 1280×720, 1366×768, 1440×900 and 1920×1080 in both themes, and `--fs-body` no smaller than 1rem.
+At viewport widths ≥ 900px the page SHALL show the headline centered at top, the four columns side by side in the middle, and "Tired?" centered at the bottom, with no vertical scroll at 1280×720, 1366×768, 1440×900 and 1920×1080 in both themes, and `--fs-body` no smaller than 1rem.
 
 #### Scenario: Short laptop screen
 - **WHEN** the page is viewed at 1280×720 on Upper B day in night mode
@@ -43,7 +43,7 @@ At viewport widths ≥ 900px the page SHALL show the headline and the four side-
 - **THEN** content is centered within a max width of 72rem with no vertical scroll
 
 ### Requirement: Tablet layout
-At widths 600–899px the page SHALL show the workouts in a 2×2 grid (Upper A / Lower A on top, Upper B / Lower B below), vertically centered when shorter than the screen, and MAY scroll vertically.
+At widths 600–899px the page SHALL show the workouts in a 2×2 grid (Upper A / Lower A on top, Upper B / Lower B below) and MAY scroll vertically.
 
 #### Scenario: Tablet grid
 - **WHEN** the page is viewed at 768px wide
