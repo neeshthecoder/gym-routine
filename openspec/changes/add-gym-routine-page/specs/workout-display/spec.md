@@ -18,7 +18,7 @@ The page SHALL show Upper A, Lower A, Upper B and Lower B in that order, each as
 
 #### Scenario: Column content
 - **WHEN** the Upper A column renders
-- **THEN** it shows `Upper A:`, a line containing "Strength & thickness" and "Alternate A1/A2 and B1/B2. Rest 60–90 s between movements.", and seven exercises ending with "Incline treadmill walk"
+- **THEN** it shows `Upper A:`, a line containing "Strength & thickness" and "Alternate A1/A2 and B1/B2. Rest 60–90 s between movements.", and seven exercises ending with "Stationary bike or incline treadmill walk"
 
 ### Requirement: Exercise items
 Each exercise SHALL show its name in serif (`--fs-body`, `--ink`) on one line and its detail in sans (`--fs-small`, `--ink-soft`, tabular lining numerals) beneath, using the exact routine data including pairing labels (A1, A2, B1…), `×` and `–`. Cardio SHALL be the last item, styled the same.
@@ -32,7 +32,7 @@ Each exercise SHALL show its name in serif (`--fs-body`, `--ink`) on one line an
 - **THEN** it wraps within the column without overflowing into the next
 
 ### Requirement: Desktop no-scroll layout
-At viewport widths ≥ 900px the page SHALL show the headline centered at top, the four columns side by side in the middle, and "Tired?" centered at the bottom, with no vertical scroll at 1280×720, 1366×768, 1440×900 and 1920×1080 in both themes, and `--fs-body` no smaller than 1rem.
+At viewport widths ≥ 900px the page SHALL show the headline and the four side-by-side columns as one block centered vertically and horizontally on the screen, with "Tired?" centered at the bottom, with no vertical scroll at 1280×720, 1366×768, 1440×900 and 1920×1080 in both themes, and `--fs-body` no smaller than 1rem.
 
 #### Scenario: Short laptop screen
 - **WHEN** the page is viewed at 1280×720 on Upper B day in night mode
@@ -43,7 +43,7 @@ At viewport widths ≥ 900px the page SHALL show the headline centered at top, t
 - **THEN** content is centered within a max width of 72rem with no vertical scroll
 
 ### Requirement: Tablet layout
-At widths 600–899px the page SHALL show the workouts in a 2×2 grid (Upper A / Lower A on top, Upper B / Lower B below) and MAY scroll vertically.
+At widths 600–899px the page SHALL show the workouts in a 2×2 grid (Upper A / Lower A on top, Upper B / Lower B below), vertically centered when shorter than the screen, and MAY scroll vertically.
 
 #### Scenario: Tablet grid
 - **WHEN** the page is viewed at 768px wide
@@ -61,18 +61,18 @@ Below 600px the page SHALL stack everything in one scrolling column with a left-
 - **THEN** the workouts appear in normal order Upper A, Lower A, Upper B, Lower B
 
 ### Requirement: Pen marks
-Pen marks SHALL be loose, single-stroke, imperfect hand-drawn SVG strokes in `--pen`, hidden from assistive technology, limited to the weekday circle, today's heading underline, and the "Tired?" hover/focus underline. Non-today headings SHALL carry at most a thin ink-colored hand-drawn underline.
+Pen marks SHALL be loose, single-stroke, imperfect hand-drawn SVG strokes in `--pen`, hidden from assistive technology, limited to the loop around today's routine in the headline, today's heading underline, and the "Tired?" hover/focus underline. Non-today headings SHALL carry at most a thin ink-colored hand-drawn underline.
 
 #### Scenario: Only one circle
 - **WHEN** any day is shown
-- **THEN** at most one green circle is visible on the page
+- **THEN** at most one green loop is visible on the page
 
 ### Requirement: Load animation
-On first load the weekday circle SHALL draw itself (~700ms), then today's heading underline SHALL draw (~400ms, starting ~150ms later). No other automatic animation SHALL run, and under `prefers-reduced-motion: reduce` marks SHALL appear fully drawn with no transitions.
+On first load the headline loop SHALL draw itself (~700ms), then today's heading underline SHALL draw (~400ms, starting ~150ms later). No other automatic animation SHALL run, and under `prefers-reduced-motion: reduce` marks SHALL appear fully drawn with no transitions.
 
 #### Scenario: Reduced motion
 - **WHEN** the user's system requests reduced motion
-- **THEN** the circle and underline appear fully drawn immediately and theme changes are instant
+- **THEN** the loop and underline appear fully drawn immediately and theme changes are instant
 
 ### Requirement: No-JavaScript fallback
 With JavaScript disabled the page SHALL still render all four workout columns with full content and the headline SHALL read "Today’s workouts", with no column marked.

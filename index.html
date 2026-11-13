@@ -133,18 +133,8 @@
   .headline-js, .status { display: none; }
   .js .headline-js { display: block; }
   .js .status { display: block; }
+  .js .status[hidden] { display: none; }
   .js .headline-fallback { display: none; }
-
-  /* Blackstone touch: short hairline above the headline, night only. Absolute so it costs no height. */
-  :root[data-theme="dark"] .masthead::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: calc(-1 * min(1.25rem, var(--pad-top) / 2));
-    width: 3rem;
-    height: 1px;
-    background: var(--ink);
-  }
 
   .status {
     margin-top: var(--space-sm);
@@ -188,7 +178,7 @@
     pointer-events: none;
   }
 
-  .day-mark {
+  .today-mark {
     position: relative;
     display: inline-block;
     white-space: nowrap;
@@ -208,11 +198,11 @@
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
-  .pen-circle {
-    left: -0.35em;
-    top: -24%;
-    width: calc(100% + 0.7em);
-    height: 144%;
+  .pen-loop {
+    left: -0.2em;
+    top: -18%;
+    width: calc(100% + 0.45em);
+    height: 138%;
   }
   .pen-underline {
     left: -2%;
@@ -228,12 +218,12 @@
   /* Draw-on animation, once on load. Removed from <html> afterwards.
      --len is each path's on-screen length, measured by JS (non-scaling strokes
      dash in screen pixels, so pathLength="1" can't be used). */
-  .animate .day-mark .pen,
+  .animate .today-mark .pen,
   .animate .workout[data-today="true"] .pen-green .pen {
     stroke-dasharray: var(--len) var(--len);
     stroke-dashoffset: var(--len);
   }
-  .animate .day-mark .pen {
+  .animate .today-mark .pen {
     animation: draw 700ms cubic-bezier(.65, 0, .35, 1) forwards;
   }
   .animate .workout[data-today="true"] .pen-green .pen {
@@ -406,7 +396,22 @@
 
   /* ---------- Mobile (< 600px): today's workout first ---------- */
   @media (max-width: 599.98px) {
+    .headline { line-height: 1.2; }
     .workout[data-today="true"] { order: -1; }
+  }
+
+  /* ---------- Tablet and up: content sits in the middle of the screen,
+     "Tired?" at the bottom. Equal 1fr rows above and below keep it centred
+     on the viewport; the bottom row never shrinks below "Tired?". ---------- */
+  @media (min-width: 600px) {
+    html, body { height: 100%; }
+    .page {
+      min-height: 100%;
+      display: grid;
+      grid-template-rows: 1fr auto 1fr;
+    }
+    .content { grid-row: 2; }
+    .foot { grid-row: 3; align-self: end; }
   }
 
   /* ---------- Tablet (600–899px): 2 × 2 ---------- */
@@ -433,24 +438,13 @@
       --name-lh: 1.3;
       --detail-lh: 1.35;
     }
-    html, body { height: 100%; }
-    .page {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
+    .page { height: 100%; }
     .masthead { text-align: center; }
-    :root[data-theme="dark"] .masthead::before {
-      left: 50%;
-      transform: translateX(-50%);
-    }
     .workouts {
-      flex: 0 0 auto;
       align-content: start;
       grid-template-columns: repeat(4, 1fr);
       column-gap: clamp(2rem, 4vw, 4rem);
     }
-    .foot { margin-top: auto; padding-top: var(--gap-foot); }
   }
 
   /* ---------- Reduced motion: marks drawn, nothing moves ---------- */
@@ -466,9 +460,10 @@
 <body>
 <div class="page">
 
+  <div class="content">
   <header class="masthead">
     <h1 class="headline headline-fallback">Today’s workouts</h1>
-    <h1 class="headline headline-js" aria-labelledby="headline-text"><span class="kern-probe" aria-hidden="true"></span><span class="t-letter" aria-hidden="true">T</span><button type="button" class="theme-o" aria-label="Switch color theme">o</button><span aria-hidden="true"><span class="after-o">day is</span> <span class="day-mark"><span class="day-name">Monday</span><svg class="pen-mark pen-circle" viewBox="0 0 200 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M38 14 C 90 2, 175 6, 192 34 C 204 58, 150 76, 92 74 C 40 72, 4 60, 8 38 C 12 18, 52 8, 110 10"/></svg></span></span><span class="sr-only" id="headline-text">Today is Monday</span></h1>
+    <h1 class="headline headline-js" aria-labelledby="headline-text"><span class="kern-probe" aria-hidden="true"></span><span class="t-letter" aria-hidden="true">T</span><button type="button" class="theme-o" aria-label="Switch color theme">o</button><span aria-hidden="true"><span class="after-o">day is</span> <span class="day-name">Monday</span>, <span class="today-mark"><span class="routine-name">Upper A</span><svg class="pen-mark pen-loop" viewBox="0 0 200 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" transform="rotate(-2.5 100 40)" d="M30 22 C 80 4, 168 4, 192 26 C 206 40, 190 64, 136 72 C 86 79, 20 74, 9 52 C 0 34, 26 14, 84 9 C 128 5, 176 10, 197 20 C 202 23, 204 28, 199 33"/></svg></span></span><span class="sr-only" id="headline-text">Today is Monday, Upper A</span></h1>
     <p class="status" id="status"></p>
   </header>
 
@@ -483,12 +478,12 @@
       <p class="meta">Strength &amp; thickness · Alternate A1/A2 and B1/B2. Rest 60–90 s between movements.</p>
       <ol class="exercises">
         <li><span class="exercise-name">Barbell bench press</span><span class="exercise-detail">A1 · 2 × 5–7 · 1 RIR</span></li>
-        <li><span class="exercise-name">Chest-supported row</span><span class="exercise-detail">A2 · 2 × 6–8 · 1 RIR</span></li>
+        <li><span class="exercise-name">Row</span><span class="exercise-detail">A2 · 2 × 6–8 · 1 RIR</span></li>
         <li><span class="exercise-name">Overhead dumbbell press</span><span class="exercise-detail">B1 · 2 × 8–10 · 0–1 RIR</span></li>
         <li><span class="exercise-name">Lat pulldown</span><span class="exercise-detail">B2 · 2 × 8–10 · 0–1 RIR</span></li>
         <li><span class="exercise-name">Rope tricep pushdown</span><span class="exercise-detail">C1 · 2 × 10–12 · 0 RIR</span></li>
         <li><span class="exercise-name">Dumbbell or cable bicep curl</span><span class="exercise-detail">C2 · 2 × 10–12 · 0 RIR</span></li>
-        <li><span class="exercise-name">Incline treadmill walk</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
+        <li><span class="exercise-name">Stationary bike or incline treadmill walk</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
       </ol>
     </section>
 
@@ -498,7 +493,7 @@
       <ol class="exercises">
         <li><span class="exercise-name">Barbell back squat or hack squat</span><span class="exercise-detail">A1 · 2 × 5–7 · 1 RIR</span></li>
         <li><span class="exercise-name">Hanging leg raises</span><span class="exercise-detail">A2 · 2 × 10–15 · 0–1 RIR</span></li>
-        <li><span class="exercise-name">Romanian deadlift</span><span class="exercise-detail">B1 · 2 × 6–8 · 1 RIR</span></li>
+        <li><span class="exercise-name">Hamstring curl</span><span class="exercise-detail">B1 · 2 × 6–8 · 1 RIR</span></li>
         <li><span class="exercise-name">Standing calf raises</span><span class="exercise-detail">B2 · 2 × 10–12 · 0 RIR</span></li>
         <li><span class="exercise-name">Leg extension</span><span class="exercise-detail">C1 · 2 × 10–12 · 0 RIR</span></li>
         <li><span class="exercise-name">Stationary bike</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
@@ -513,9 +508,9 @@
         <li><span class="exercise-name">Pull-ups or neutral-grip pulldown</span><span class="exercise-detail">A2 · 2 × 8–10 · 0–1 RIR</span></li>
         <li><span class="exercise-name">Machine shoulder press</span><span class="exercise-detail">B1 · 2 × 8–10 · 0–1 RIR</span></li>
         <li><span class="exercise-name">Seated cable row</span><span class="exercise-detail">B2 · 2 × 8–10 · 0–1 RIR</span></li>
-        <li><span class="exercise-name">Cable or dumbbell lateral raises</span><span class="exercise-detail">C1 · 2 × 12–15 · 0 RIR</span></li>
-        <li><span class="exercise-name">Face pulls or reverse pec deck</span><span class="exercise-detail">C2 · 2 × 12–15 · 0 RIR</span></li>
-        <li><span class="exercise-name">Elliptical or rower</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
+        <li><span class="exercise-name">Dumbbell lateral raises</span><span class="exercise-detail">C1 · 2 × 12–15 · 0 RIR</span></li>
+        <li><span class="exercise-name">Face pulls</span><span class="exercise-detail">C2 · 2 × 12–15 · 0 RIR</span></li>
+        <li><span class="exercise-name">Incline walk or bike</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
       </ol>
     </section>
 
@@ -523,7 +518,7 @@
       <h2 id="lower-b-title"><span class="heading-mark">Lower B:<svg class="pen-mark pen-underline pen-ink" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg><svg class="pen-mark pen-underline pen-green" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg></span><span class="sr-only today-label" hidden> — today</span></h2>
       <p class="meta">Posterior &amp; unilateral focus · Rest 90–120 s between heavy sets.</p>
       <ol class="exercises">
-        <li><span class="exercise-name">Trap bar deadlift or hip thrust</span><span class="exercise-detail">A1 · 2 × 6–8 · 1 RIR</span></li>
+        <li><span class="exercise-name">Deadlift</span><span class="exercise-detail">A1 · 2 × 6–8 · 1 RIR</span></li>
         <li><span class="exercise-name">Cable crunch or ab wheel</span><span class="exercise-detail">A2 · 2 × 10–15 · 0–1 RIR</span></li>
         <li><span class="exercise-name">Leg press or Bulgarian split squat</span><span class="exercise-detail">B1 · 2 × 8–10 · 1 RIR</span></li>
         <li><span class="exercise-name">Seated leg curl</span><span class="exercise-detail">B2 · 2 × 10–12 · 0 RIR</span></li>
@@ -533,6 +528,7 @@
     </section>
 
   </main>
+  </div>
 
   <footer class="foot">
     <button type="button" class="tired" id="tired"><span class="tired-text">Tired?<svg class="pen-mark pen-underline pen-tired" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg></span></button>
@@ -562,12 +558,12 @@
       note: "Alternate A1/A2 and B1/B2. Rest 60–90 s between movements.",
       exercises: [
         { name: "Barbell bench press",            detail: "A1 · 2 × 5–7 · 1 RIR" },
-        { name: "Chest-supported row",            detail: "A2 · 2 × 6–8 · 1 RIR" },
+        { name: "Row",            detail: "A2 · 2 × 6–8 · 1 RIR" },
         { name: "Overhead dumbbell press",        detail: "B1 · 2 × 8–10 · 0–1 RIR" },
         { name: "Lat pulldown",                   detail: "B2 · 2 × 8–10 · 0–1 RIR" },
         { name: "Rope tricep pushdown",           detail: "C1 · 2 × 10–12 · 0 RIR" },
         { name: "Dumbbell or cable bicep curl",   detail: "C2 · 2 × 10–12 · 0 RIR" },
-        { name: "Incline treadmill walk",         detail: "Cardio · 10–15 min" }
+        { name: "Stationary bike or incline treadmill walk",         detail: "Cardio · 10–15 min" }
       ]
     },
     "lower-a": {
@@ -577,7 +573,7 @@
       exercises: [
         { name: "Barbell back squat or hack squat", detail: "A1 · 2 × 5–7 · 1 RIR" },
         { name: "Hanging leg raises",               detail: "A2 · 2 × 10–15 · 0–1 RIR" },
-        { name: "Romanian deadlift",                detail: "B1 · 2 × 6–8 · 1 RIR" },
+        { name: "Hamstring curl",                detail: "B1 · 2 × 6–8 · 1 RIR" },
         { name: "Standing calf raises",             detail: "B2 · 2 × 10–12 · 0 RIR" },
         { name: "Leg extension",                    detail: "C1 · 2 × 10–12 · 0 RIR" },
         { name: "Stationary bike",                  detail: "Cardio · 10–15 min" }
@@ -592,9 +588,9 @@
         { name: "Pull-ups or neutral-grip pulldown",  detail: "A2 · 2 × 8–10 · 0–1 RIR" },
         { name: "Machine shoulder press",             detail: "B1 · 2 × 8–10 · 0–1 RIR" },
         { name: "Seated cable row",                   detail: "B2 · 2 × 8–10 · 0–1 RIR" },
-        { name: "Cable or dumbbell lateral raises",   detail: "C1 · 2 × 12–15 · 0 RIR" },
-        { name: "Face pulls or reverse pec deck",     detail: "C2 · 2 × 12–15 · 0 RIR" },
-        { name: "Elliptical or rower",                detail: "Cardio · 10–15 min" }
+        { name: "Dumbbell lateral raises",   detail: "C1 · 2 × 12–15 · 0 RIR" },
+        { name: "Face pulls",     detail: "C2 · 2 × 12–15 · 0 RIR" },
+        { name: "Incline walk or bike",                detail: "Cardio · 10–15 min" }
       ]
     },
     "lower-b": {
@@ -602,7 +598,7 @@
       focus: "Posterior & unilateral focus",
       note: "Rest 90–120 s between heavy sets.",
       exercises: [
-        { name: "Trap bar deadlift or hip thrust",       detail: "A1 · 2 × 6–8 · 1 RIR" },
+        { name: "Deadlift",       detail: "A1 · 2 × 6–8 · 1 RIR" },
         { name: "Cable crunch or ab wheel",              detail: "A2 · 2 × 10–15 · 0–1 RIR" },
         { name: "Leg press or Bulgarian split squat",    detail: "B1 · 2 × 8–10 · 1 RIR" },
         { name: "Seated leg curl",                       detail: "B2 · 2 × 10–12 · 0 RIR" },
@@ -650,6 +646,7 @@
 
   // ---------- Day ----------
   const dayNameEl = $(".day-name");
+  const routineNameEl = $(".routine-name");
   const headlineText = $("#headline-text");
   const statusEl = $("#status");
   const sections = Array.from(document.querySelectorAll(".workout"));
@@ -660,11 +657,18 @@
     return param !== null && /^[0-6]$/.test(param) ? Number(param) : new Date().getDay();
   }
 
+  // What the green mark wraps: the routine name, or "rest day".
+  function todayLabel(day) {
+    const id = schedule[day];
+    return id ? routine[id].name : "rest day";
+  }
+
+  // Small line under the headline (the routine name is already in the headline).
   function statusFor(day) {
     const id = schedule[day];
-    if (id) return routine[id].name + " · " + routine[id].focus.toLowerCase();
-    if (day === 3) return "Rest day · light walk if you feel like it";
-    return "Rest day";
+    if (id) return routine[id].focus;
+    if (day === 3) return "Light walk if you feel like it";
+    return "";
   }
 
   let currentDay = null;
@@ -672,9 +676,12 @@
   function applyDay(day) {
     currentDay = day;
     const name = DAY_NAMES[day];
+    const label = todayLabel(day);
     dayNameEl.textContent = name;
-    headlineText.textContent = "Today is " + name;
+    routineNameEl.textContent = label;
+    headlineText.textContent = "Today is " + name + ", " + label;
     statusEl.textContent = statusFor(day);
+    statusEl.hidden = !statusEl.textContent;
 
     const todayId = schedule[day];
     sections.forEach((section) => {
@@ -741,7 +748,7 @@
   // Store each visible mark's on-screen length in --len for the dash animation.
   // Padded a little so a late web-font swap can't leave a gap at the tail.
   function measurePens() {
-    document.querySelectorAll(".day-mark .pen, .pen-green .pen").forEach((path) => {
+    document.querySelectorAll(".today-mark .pen, .pen-green .pen").forEach((path) => {
       const m = path.getScreenCTM();
       if (!m || !path.getBBox().width) return; // hidden (not today's column)
       const total = path.getTotalLength();
