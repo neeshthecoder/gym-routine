@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Today’s workout</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%8B%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<script>
+  // Runs before first paint: pick the theme from the local clock (night 19:00–06:59).
+  (function () {
+    var h = new Date().getHours();
+    var root = document.documentElement;
+    root.setAttribute("data-theme", h >= 19 || h < 7 ? "dark" : "light");
+    root.className += " js animate";
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Figtree:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Tokens ---------- */
+  :root {
+    /* Day mode (Sequoia) */
+    --paper: #F9F5EE;
+    --ink: #1A1814;
+    --ink-soft: #5E5A52;
+    --rule: #D9D2C4;
+    --pen: #0E9A6A;
+    --pen-wash: #0E9A6A1A;
+    --pen-width: 2.5px;
+    --sans-weight: 400;
+    color-scheme: light;
+
+    --serif: "Source Serif 4", "Iowan Old Style", "Georgia", serif;
+    --sans: "Figtree", "Helvetica Neue", Arial, sans-serif;
+
+    --fs-display: clamp(2.5rem, 6vw, 4.5rem);
+    --fs-h2: clamp(1.5rem, 2.6vw, 2rem);
+    --fs-body: clamp(1.125rem, 1.6vw, 1.3rem);
+    --fs-small: 0.9375rem;
+    --fs-micro: 0.8125rem;
+
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2.5rem;
+    --space-2xl: clamp(3rem, 8vw, 6rem);
+    --space-3xl: clamp(4rem, 14vw, 10rem);
+
+    /* Layout knobs (overridden on desktop) */
+    --pad-inline: clamp(1.5rem, 5vw, 4rem);
+    --pad-top: var(--space-3xl);
+    --pad-bottom: var(--space-xl);
+    --gap-head: var(--space-2xl);
+    --gap-foot: var(--space-2xl);
+    --item-gap: var(--space-md);
+    --name-lh: 1.5;
+    --detail-lh: 1.45;
+  }
+
+  :root[data-theme="dark"] {
+    /* Night mode (Blackstone) */
+    --paper: #000000;
+    --ink: #FFFFFF;
+    --ink-soft: #A3A3A3;
+    --rule: #2A2A2A;
+    --pen: #3FCF97;
+    --pen-wash: #3FCF971F;
+    --pen-width: 2px;
+    --sans-weight: 300;
+    color-scheme: dark;
+  }
+
+  /* ---------- Base ---------- */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: var(--fs-body);
+    line-height: 1.5;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Theme switch: colors crossfade over 200ms. */
+  body, body * {
+    transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, stroke 200ms ease;
+  }
+
+  h1, h2, p, ol { margin: 0; }
+
+  .sr-only {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .page {
+    width: min(72rem, 100% - 2 * var(--pad-inline));
+    margin-inline: auto;
+    padding-top: calc(var(--pad-top) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(var(--pad-bottom) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ---------- Headline ---------- */
+  .masthead { position: relative; }
+
+  .headline {
+    font-family: var(--serif);
+    font-size: var(--fs-display);
+    font-weight: 400;
+    font-variation-settings: "opsz" 60;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    position: relative;
+  }
+  :root[data-theme="dark"] .headline {
+    font-weight: 350;
+    letter-spacing: -0.025em;
+  }
+
+  .headline-js, .status { display: none; }
+  .js .headline-js { display: block; }
+  .js .status { display: block; }
+  .js .headline-fallback { display: none; }
+
+  /* Blackstone touch: short hairline above the headline, night only. Absolute so it costs no height. */
+  :root[data-theme="dark"] .masthead::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: calc(-1 * min(1.25rem, var(--pad-top) / 2));
+    width: 3rem;
+    height: 1px;
+    background: var(--ink);
+  }
+
+  .status {
+    margin-top: var(--space-sm);
+    font-family: var(--sans);
+    font-size: var(--fs-small);
+    font-weight: var(--sans-weight);
+    line-height: 1.45;
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+  }
+
+  /* The hidden theme toggle: the "o" in "Today". Must look exactly like plain text. */
+  .theme-o {
+    all: unset;
+    display: inline;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .theme-o::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+  .theme-o:focus-visible {
+    outline: 2px solid var(--pen);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+
+  .kern-probe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    visibility: hidden;
+    white-space: pre;
+    pointer-events: none;
+  }
+
+  .day-mark {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  /* ---------- Pen marks ---------- */
+  .pen-mark {
+    position: absolute;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .pen {
+    fill: none;
+    stroke: var(--pen);
+    stroke-width: var(--pen-width);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .pen-circle {
+    left: -0.35em;
+    top: -24%;
+    width: calc(100% + 0.7em);
+    height: 144%;
+  }
+  .pen-underline {
+    left: -2%;
+    width: 107%;
+    bottom: -0.3em;
+    height: 0.32em;
+  }
+  .pen-ink .pen {
+    stroke: var(--ink);
+    stroke-width: 1.25px;
+  }
+
+  /* Draw-on animation, once on load. Removed from <html> afterwards.
+     --len is each path's on-screen length, measured by JS (non-scaling strokes
+     dash in screen pixels, so pathLength="1" can't be used). */
+  .animate .day-mark .pen,
+  .animate .workout[data-today="true"] .pen-green .pen {
+    stroke-dasharray: var(--len) var(--len);
+    stroke-dashoffset: var(--len);
+  }
+  .animate .day-mark .pen {
+    animation: draw 700ms cubic-bezier(.65, 0, .35, 1) forwards;
+  }
+  .animate .workout[data-today="true"] .pen-green .pen {
+    animation: draw 400ms cubic-bezier(.65, 0, .35, 1) 850ms forwards;
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  /* ---------- Workouts ---------- */
+  .workouts {
+    display: grid;
+    grid-template-columns: 1fr;
+    row-gap: var(--space-2xl);
+    margin-top: var(--gap-head);
+  }
+
+  .workout h2 {
+    font-family: var(--serif);
+    font-size: var(--fs-h2);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .heading-mark {
+    position: relative;
+    display: inline-block;
+  }
+  .pen-green { display: none; }
+  .workout[data-today="true"] .pen-green { display: block; }
+  .workout[data-today="true"] .pen-ink { display: none; }
+
+  .meta {
+    margin-top: 0.75em;
+    font-family: var(--sans);
+    font-size: var(--fs-micro);
+    font-weight: var(--sans-weight);
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+  }
+
+  .exercises {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--list-gap, var(--space-md));
+    display: grid;
+    row-gap: var(--item-gap);
+  }
+
+  .exercise-name {
+    display: block;
+    font-family: var(--serif);
+    font-size: var(--fs-body);
+    line-height: var(--name-lh);
+    color: var(--ink);
+  }
+  .exercise-detail {
+    display: block;
+    font-family: var(--sans);
+    font-size: var(--fs-small);
+    font-weight: var(--sans-weight);
+    line-height: var(--detail-lh);
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* ---------- Footer: "Tired?" ---------- */
+  .foot {
+    display: none;
+    justify-content: center;
+    margin-top: var(--gap-foot);
+  }
+  .js .foot { display: flex; }
+
+  .tired {
+    all: unset;
+    position: relative;
+    cursor: pointer;
+    font-family: var(--serif);
+    font-size: var(--fs-body);
+    line-height: 1.5;
+    color: var(--ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tired::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    min-width: 44px;
+    width: calc(100% + 1rem);
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+  .tired-text { position: relative; display: inline-block; }
+  .tired .pen-tired .pen {
+    stroke: var(--ink);
+    stroke-width: 1.25px;
+    transition: stroke 150ms ease;
+  }
+  .tired:hover .pen-tired .pen,
+  .tired:focus-visible .pen-tired .pen { stroke: var(--pen); }
+  .tired:focus-visible {
+    outline: 2px solid var(--pen);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+
+  /* ---------- Quote popup ---------- */
+  .quote-dialog {
+    width: min(30rem, 100% - 2rem);
+    max-width: 100%;
+    max-height: 80vh;
+    overflow: auto;
+    padding: var(--space-xl);
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .quote-dialog[open] { animation: fade-in 150ms ease-out; }
+  .quote-dialog::backdrop {
+    background: rgba(249, 245, 238, 0.7);
+    background: color-mix(in srgb, #F9F5EE 70%, transparent);
+    animation: fade-in 150ms ease-out;
+  }
+  :root[data-theme="dark"] .quote-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+    background: color-mix(in srgb, #000000 70%, transparent);
+  }
+  @keyframes fade-in { from { opacity: 0; } }
+
+  .quote-text {
+    font-family: var(--serif);
+    font-size: var(--fs-body);
+    line-height: 1.5;
+    color: var(--ink);
+    text-align: left;
+  }
+  .quote-by {
+    margin-top: var(--space-md);
+    font-family: var(--sans);
+    font-size: var(--fs-small);
+    font-weight: var(--sans-weight);
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+  .quote-close {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: var(--space-md);
+    margin-bottom: -0.75rem;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: var(--fs-micro);
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+  }
+  .quote-close:hover { color: var(--ink); }
+  .quote-close:focus-visible {
+    outline: 2px solid var(--pen);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* ---------- Mobile (< 600px): today's workout first ---------- */
+  @media (max-width: 599.98px) {
+    .workout[data-today="true"] { order: -1; }
+  }
+
+  /* ---------- Tablet (600–899px): 2 × 2 ---------- */
+  @media (min-width: 600px) {
+    .workouts {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: clamp(2rem, 4vw, 4rem);
+    }
+  }
+
+  /* ---------- Desktop (≥ 900px): one screen, no scroll ---------- */
+  @media (min-width: 900px) {
+    :root {
+      /* Height-aware sizes: short screens compress empty space first,
+         then body text (never below 1rem), then the display line. */
+      --fs-display: clamp(2.25rem, min(6vw, 7.5vh), 4.5rem);
+      --fs-body: clamp(1rem, min(1.6vw, 2.3vh), 1.3rem);
+      --pad-top: clamp(1rem, 5vh, 6rem);
+      --pad-bottom: clamp(0.5rem, 2.5vh, 3rem);
+      --gap-head: clamp(1rem, 4.5vh, 6rem);
+      --gap-foot: clamp(0.75rem, 3vh, 4rem);
+      --item-gap: clamp(0.5rem, 1.2vh, 1rem);
+      --list-gap: clamp(0.5rem, 1.8vh, 1rem);
+      --name-lh: 1.3;
+      --detail-lh: 1.35;
+    }
+    html, body { height: 100%; }
+    .page {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .masthead { text-align: center; }
+    :root[data-theme="dark"] .masthead::before {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .workouts {
+      flex: 0 0 auto;
+      align-content: start;
+      grid-template-columns: repeat(4, 1fr);
+      column-gap: clamp(2rem, 4vw, 4rem);
+    }
+    .foot { margin-top: auto; padding-top: var(--gap-foot); }
+  }
+
+  /* ---------- Reduced motion: marks drawn, nothing moves ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after, ::backdrop {
+      animation: none !important;
+      transition: none !important;
+    }
+    .pen { stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <h1 class="headline headline-fallback">Today’s workouts</h1>
+    <h1 class="headline headline-js" aria-labelledby="headline-text"><span class="kern-probe" aria-hidden="true"></span><span class="t-letter" aria-hidden="true">T</span><button type="button" class="theme-o" aria-label="Switch color theme">o</button><span aria-hidden="true"><span class="after-o">day is</span> <span class="day-mark"><span class="day-name">Monday</span><svg class="pen-mark pen-circle" viewBox="0 0 200 80" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M38 14 C 90 2, 175 6, 192 34 C 204 58, 150 76, 92 74 C 40 72, 4 60, 8 38 C 12 18, 52 8, 110 10"/></svg></span></span><span class="sr-only" id="headline-text">Today is Monday</span></h1>
+    <p class="status" id="status"></p>
+  </header>
+
+  <!--
+    ROUTINE MARKUP — hardcoded so the page works without JavaScript.
+    Keep this in sync with the `routine` object at the top of the <script> below.
+  -->
+  <main class="workouts">
+
+    <section class="workout" data-workout="upper-a" aria-labelledby="upper-a-title">
+      <h2 id="upper-a-title"><span class="heading-mark">Upper A:<svg class="pen-mark pen-underline pen-ink" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg><svg class="pen-mark pen-underline pen-green" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg></span><span class="sr-only today-label" hidden> — today</span></h2>
+      <p class="meta">Strength &amp; thickness · Alternate A1/A2 and B1/B2. Rest 60–90 s between movements.</p>
+      <ol class="exercises">
+        <li><span class="exercise-name">Barbell bench press</span><span class="exercise-detail">A1 · 2 × 5–7 · 1 RIR</span></li>
+        <li><span class="exercise-name">Chest-supported row</span><span class="exercise-detail">A2 · 2 × 6–8 · 1 RIR</span></li>
+        <li><span class="exercise-name">Overhead dumbbell press</span><span class="exercise-detail">B1 · 2 × 8–10 · 0–1 RIR</span></li>
+        <li><span class="exercise-name">Lat pulldown</span><span class="exercise-detail">B2 · 2 × 8–10 · 0–1 RIR</span></li>
+        <li><span class="exercise-name">Rope tricep pushdown</span><span class="exercise-detail">C1 · 2 × 10–12 · 0 RIR</span></li>
+        <li><span class="exercise-name">Dumbbell or cable bicep curl</span><span class="exercise-detail">C2 · 2 × 10–12 · 0 RIR</span></li>
+        <li><span class="exercise-name">Incline treadmill walk</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
+      </ol>
+    </section>
+
+    <section class="workout" data-workout="lower-a" aria-labelledby="lower-a-title">
+      <h2 id="lower-a-title"><span class="heading-mark">Lower A:<svg class="pen-mark pen-underline pen-ink" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg><svg class="pen-mark pen-underline pen-green" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg></span><span class="sr-only today-label" hidden> — today</span></h2>
+      <p class="meta">Quad &amp; hinge focus · Rest 90–120 s between heavy sets.</p>
+      <ol class="exercises">
+        <li><span class="exercise-name">Barbell back squat or hack squat</span><span class="exercise-detail">A1 · 2 × 5–7 · 1 RIR</span></li>
+        <li><span class="exercise-name">Hanging leg raises</span><span class="exercise-detail">A2 · 2 × 10–15 · 0–1 RIR</span></li>
+        <li><span class="exercise-name">Romanian deadlift</span><span class="exercise-detail">B1 · 2 × 6–8 · 1 RIR</span></li>
+        <li><span class="exercise-name">Standing calf raises</span><span class="exercise-detail">B2 · 2 × 10–12 · 0 RIR</span></li>
+        <li><span class="exercise-name">Leg extension</span><span class="exercise-detail">C1 · 2 × 10–12 · 0 RIR</span></li>
+        <li><span class="exercise-name">Stationary bike</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
+      </ol>
+    </section>
+
+    <section class="workout" data-workout="upper-b" aria-labelledby="upper-b-title">
+      <h2 id="upper-b-title"><span class="heading-mark">Upper B:<svg class="pen-mark pen-underline pen-ink" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg><svg class="pen-mark pen-underline pen-green" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg></span><span class="sr-only today-label" hidden> — today</span></h2>
+      <p class="meta">Hypertrophy &amp; width · Alternate A1/A2 and B1/B2. Rest 60–90 s between movements.</p>
+      <ol class="exercises">
+        <li><span class="exercise-name">Incline dumbbell press</span><span class="exercise-detail">A1 · 2 × 8–10 · 0–1 RIR</span></li>
+        <li><span class="exercise-name">Pull-ups or neutral-grip pulldown</span><span class="exercise-detail">A2 · 2 × 8–10 · 0–1 RIR</span></li>
+        <li><span class="exercise-name">Machine shoulder press</span><span class="exercise-detail">B1 · 2 × 8–10 · 0–1 RIR</span></li>
+        <li><span class="exercise-name">Seated cable row</span><span class="exercise-detail">B2 · 2 × 8–10 · 0–1 RIR</span></li>
+        <li><span class="exercise-name">Cable or dumbbell lateral raises</span><span class="exercise-detail">C1 · 2 × 12–15 · 0 RIR</span></li>
+        <li><span class="exercise-name">Face pulls or reverse pec deck</span><span class="exercise-detail">C2 · 2 × 12–15 · 0 RIR</span></li>
+        <li><span class="exercise-name">Elliptical or rower</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
+      </ol>
+    </section>
+
+    <section class="workout" data-workout="lower-b" aria-labelledby="lower-b-title">
+      <h2 id="lower-b-title"><span class="heading-mark">Lower B:<svg class="pen-mark pen-underline pen-ink" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg><svg class="pen-mark pen-underline pen-green" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg></span><span class="sr-only today-label" hidden> — today</span></h2>
+      <p class="meta">Posterior &amp; unilateral focus · Rest 90–120 s between heavy sets.</p>
+      <ol class="exercises">
+        <li><span class="exercise-name">Trap bar deadlift or hip thrust</span><span class="exercise-detail">A1 · 2 × 6–8 · 1 RIR</span></li>
+        <li><span class="exercise-name">Cable crunch or ab wheel</span><span class="exercise-detail">A2 · 2 × 10–15 · 0–1 RIR</span></li>
+        <li><span class="exercise-name">Leg press or Bulgarian split squat</span><span class="exercise-detail">B1 · 2 × 8–10 · 1 RIR</span></li>
+        <li><span class="exercise-name">Seated leg curl</span><span class="exercise-detail">B2 · 2 × 10–12 · 0 RIR</span></li>
+        <li><span class="exercise-name">Seated calf raises</span><span class="exercise-detail">C1 · 2 × 12–15 · 0 RIR</span></li>
+        <li><span class="exercise-name">Incline treadmill walk</span><span class="exercise-detail">Cardio · 10–15 min</span></li>
+      </ol>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <button type="button" class="tired" id="tired"><span class="tired-text">Tired?<svg class="pen-mark pen-underline pen-tired" viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="pen" d="M2 8 C 60 14, 130 16, 200 12 C 240 10, 270 9, 296 6"/></svg></span></button>
+  </footer>
+
+</div>
+
+<dialog class="quote-dialog" id="quote-dialog" aria-label="Quote">
+  <p class="quote-text" id="quote-text"></p>
+  <p class="quote-by">— David Goggins</p>
+  <button type="button" class="quote-close" id="quote-close">Close</button>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  // =====================================================================
+  // ROUTINE — the single place to edit workouts.
+  // The markup in <main> above is hardcoded (for the no-JS fallback):
+  // when you change anything here, update the matching <section> too.
+  // =====================================================================
+  const routine = {
+    "upper-a": {
+      name: "Upper A",
+      focus: "Strength & thickness",
+      note: "Alternate A1/A2 and B1/B2. Rest 60–90 s between movements.",
+      exercises: [
+        { name: "Barbell bench press",            detail: "A1 · 2 × 5–7 · 1 RIR" },
+        { name: "Chest-supported row",            detail: "A2 · 2 × 6–8 · 1 RIR" },
+        { name: "Overhead dumbbell press",        detail: "B1 · 2 × 8–10 · 0–1 RIR" },
+        { name: "Lat pulldown",                   detail: "B2 · 2 × 8–10 · 0–1 RIR" },
+        { name: "Rope tricep pushdown",           detail: "C1 · 2 × 10–12 · 0 RIR" },
+        { name: "Dumbbell or cable bicep curl",   detail: "C2 · 2 × 10–12 · 0 RIR" },
+        { name: "Incline treadmill walk",         detail: "Cardio · 10–15 min" }
+      ]
+    },
+    "lower-a": {
+      name: "Lower A",
+      focus: "Quad & hinge focus",
+      note: "Rest 90–120 s between heavy sets.",
+      exercises: [
+        { name: "Barbell back squat or hack squat", detail: "A1 · 2 × 5–7 · 1 RIR" },
+        { name: "Hanging leg raises",               detail: "A2 · 2 × 10–15 · 0–1 RIR" },
+        { name: "Romanian deadlift",                detail: "B1 · 2 × 6–8 · 1 RIR" },
+        { name: "Standing calf raises",             detail: "B2 · 2 × 10–12 · 0 RIR" },
+        { name: "Leg extension",                    detail: "C1 · 2 × 10–12 · 0 RIR" },
+        { name: "Stationary bike",                  detail: "Cardio · 10–15 min" }
+      ]
+    },
+    "upper-b": {
+      name: "Upper B",
+      focus: "Hypertrophy & width",
+      note: "Alternate A1/A2 and B1/B2. Rest 60–90 s between movements.",
+      exercises: [
+        { name: "Incline dumbbell press",             detail: "A1 · 2 × 8–10 · 0–1 RIR" },
+        { name: "Pull-ups or neutral-grip pulldown",  detail: "A2 · 2 × 8–10 · 0–1 RIR" },
+        { name: "Machine shoulder press",             detail: "B1 · 2 × 8–10 · 0–1 RIR" },
+        { name: "Seated cable row",                   detail: "B2 · 2 × 8–10 · 0–1 RIR" },
+        { name: "Cable or dumbbell lateral raises",   detail: "C1 · 2 × 12–15 · 0 RIR" },
+        { name: "Face pulls or reverse pec deck",     detail: "C2 · 2 × 12–15 · 0 RIR" },
+        { name: "Elliptical or rower",                detail: "Cardio · 10–15 min" }
+      ]
+    },
+    "lower-b": {
+      name: "Lower B",
+      focus: "Posterior & unilateral focus",
+      note: "Rest 90–120 s between heavy sets.",
+      exercises: [
+        { name: "Trap bar deadlift or hip thrust",       detail: "A1 · 2 × 6–8 · 1 RIR" },
+        { name: "Cable crunch or ab wheel",              detail: "A2 · 2 × 10–15 · 0–1 RIR" },
+        { name: "Leg press or Bulgarian split squat",    detail: "B1 · 2 × 8–10 · 1 RIR" },
+        { name: "Seated leg curl",                       detail: "B2 · 2 × 10–12 · 0 RIR" },
+        { name: "Seated calf raises",                    detail: "C1 · 2 × 12–15 · 0 RIR" },
+        { name: "Incline treadmill walk",                detail: "Cardio · 10–15 min" }
+      ]
+    }
+  };
+
+  // 0 = Sunday … 6 = Saturday. null = rest day.
+  const schedule = { 0: null, 1: "upper-a", 2: "lower-a", 3: null, 4: "upper-b", 5: "lower-b", 6: null };
+
+  const quotes = [
+    "Whenever something is bothering me or stressing me, I fix it. I don’t wait for the next day or leave it like that.",
+    "There’s purity in physical pursuits, because it doesn’t matter what your social status is, how people perceive you, it’s how long you can stay in the “pool”, how far can you run. In the real moments, what matters is how true you are to your words.",
+    "Life is one big psychological warfare you play on yourself. It’s what you say to yourself every single day. You are at war with your mind every single day. Your mind is a perfect ground for training yourself.",
+    "Embrace suffering, you have to suffer.",
+    "Examine your brain, go back to the origin of your suffering, where your life started fucking up.",
+    "I get over everything, water under the bridge. The grind does that. If you’re worried about someone who did something to you years ago, you are not grinding. If I grind hard, I don’t have time to worry about your monkey ass. I don’t have time to put you in the hate bank. There is great joy in grinding, great joy in suffering, it cleanses your soul and makes you grow up.",
+    "I decided to face every fucking fear I have. People don’t realise how these fears haunt you at night.",
+    "I couldn’t imagine being at 50, looking back and realise I haven’t tried anything.",
+    "Anything that was horrible, I went towards it. I had to callous my mind. And then, I started opening different doors, I realised my potential is endless.",
+    "I always thought, ‘Who would have the balls to do this? No one would. Except you. You are the baddest mofo.’ I used it as fuel. Eventually, it became a reality.",
+    "I realised one demotivated day is part of the progress. Better than telling yourself, you’re not enough.",
+    "If something haunts me, and bothers me, I would do it.",
+    "You put your self help programs in a lazy situation, reading books on a couch, on a study table. What happens when you are in a tough situation? All that self talk goes away. But if you live through this shit…",
+    "I know what’s on the back end of quitting, it’s a lifetime of regret and asking why you quit.",
+    "We all want to learn to read about how to get somewhere, the only way is to live through hell to get what you want. You don’t learn from books, the effect is only temporary.",
+    "The worst thing to believe is, at 40 years old you can’t do some things. You start to believe this nonsense. The worst thing is to be civilized. “At 40 years old, I’m good.” You’re never good. You’ve never arrived.",
+    "Triple down on your weaknesses, not on your strengths. Find out something new about yourself.",
+    "A happy guy is never someone who hasn’t faced something that bothered him daily.",
+    "There is a quote: in a war of 100 people, 90 people shouldn’t be there, 9 people do the fighting, and 1 person is the warrior. I’m working towards being the one. That’s how I live my life.",
+    "I put my phone and my shit away and I go dark. I go dark a lot.",
+    "Self discipline, that’s all it is.",
+    "I believe in patience, I am a patient dude. I can watch a grass grow for 20 years because that monk like mentality is what gets you through in life.",
+    "Through repetition of things you don’t want to do, you build mental armor.",
+    "I don’t judge people anymore. Because every person who did something to you has a bad past. I study them.",
+    "In the past, I always faced my problems on a surface level, but when something bad happens, I quit. “Man, I thought I fixed this.” So I went deep into the dungeon of my soul to find out what makes me quit. So I put my sword in the fire repeatedly. I said, “We can’t quit, we have to figure out why you quit.” And eventually after too much beating, I noticed my brain is getting hard. You can’t dissect your brain in a normal situation. Dissect your brain when it’s miserable."
+  ];
+
+  const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  const root = document.documentElement;
+  const $ = (sel) => document.querySelector(sel);
+
+  // ---------- Day ----------
+  const dayNameEl = $(".day-name");
+  const headlineText = $("#headline-text");
+  const statusEl = $("#status");
+  const sections = Array.from(document.querySelectorAll(".workout"));
+
+  // ?day=0–6 overrides the weekday for previewing; anything else is ignored.
+  function resolveDay() {
+    const param = new URLSearchParams(window.location.search).get("day");
+    return param !== null && /^[0-6]$/.test(param) ? Number(param) : new Date().getDay();
+  }
+
+  function statusFor(day) {
+    const id = schedule[day];
+    if (id) return routine[id].name + " · " + routine[id].focus.toLowerCase();
+    if (day === 3) return "Rest day · light walk if you feel like it";
+    return "Rest day";
+  }
+
+  let currentDay = null;
+
+  function applyDay(day) {
+    currentDay = day;
+    const name = DAY_NAMES[day];
+    dayNameEl.textContent = name;
+    headlineText.textContent = "Today is " + name;
+    statusEl.textContent = statusFor(day);
+
+    const todayId = schedule[day];
+    sections.forEach((section) => {
+      const isToday = section.dataset.workout === todayId;
+      if (isToday) section.dataset.today = "true";
+      else section.removeAttribute("data-today");
+      section.querySelector(".today-label").hidden = !isToday;
+    });
+  }
+
+  // ---------- Theme ----------
+  const themeO = $(".theme-o");
+  const tLetter = $(".t-letter");
+  const afterO = $(".after-o");
+  const probe = $(".kern-probe");
+
+  function autoTheme() {
+    const h = new Date().getHours();
+    return h >= 19 || h < 7 ? "dark" : "light";
+  }
+
+  let manualTheme = null;         // "light" | "dark" | null — never saved
+  let lastAutoTheme = autoTheme();
+
+  function applyTheme() {
+    const theme = manualTheme || lastAutoTheme;
+    if (root.getAttribute("data-theme") !== theme) {
+      root.setAttribute("data-theme", theme);
+      fixKerning();
+    }
+  }
+
+  // Splitting "T|o|day" across elements can drop the font's kerning (T-o is a
+  // classic kern pair). Measure the unbroken word and nudge the button so the
+  // letters land exactly where plain text would put them.
+  function fixKerning() {
+    themeO.style.marginLeft = "";
+    themeO.style.marginRight = "";
+    const fontSize = parseFloat(getComputedStyle(themeO).fontSize);
+    if (!fontSize) return;
+
+    probe.textContent = "To";
+    const wantTo = probe.getBoundingClientRect().width;
+    probe.textContent = "Tod";
+    const wantTod = probe.getBoundingClientRect().width;
+    probe.textContent = "";
+
+    const left = wantTo - (themeO.getBoundingClientRect().right - tLetter.getBoundingClientRect().left);
+    themeO.style.marginLeft = (left / fontSize).toFixed(4) + "em";
+
+    const range = document.createRange();
+    range.setStart(afterO.firstChild, 0);
+    range.setEnd(afterO.firstChild, 1);
+    const right = wantTod - (range.getBoundingClientRect().right - tLetter.getBoundingClientRect().left);
+    themeO.style.marginRight = (right / fontSize).toFixed(4) + "em";
+  }
+
+  themeO.addEventListener("click", () => {
+    manualTheme = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme();
+  });
+
+  // ---------- Pen draw-on ----------
+  // Store each visible mark's on-screen length in --len for the dash animation.
+  // Padded a little so a late web-font swap can't leave a gap at the tail.
+  function measurePens() {
+    document.querySelectorAll(".day-mark .pen, .pen-green .pen").forEach((path) => {
+      const m = path.getScreenCTM();
+      if (!m || !path.getBBox().width) return; // hidden (not today's column)
+      const total = path.getTotalLength();
+      let sum = 0, prev = null;
+      for (let i = 0; i <= 60; i++) {
+        const p = path.getPointAtLength((total * i) / 60);
+        const x = p.x * m.a + p.y * m.c;
+        const y = p.x * m.b + p.y * m.d;
+        if (prev) sum += Math.hypot(x - prev[0], y - prev[1]);
+        prev = [x, y];
+      }
+      path.style.setProperty("--len", (sum * 1.15 + 4).toFixed(1) + "px");
+    });
+  }
+
+  // ---------- Clock: theme boundary + midnight rollover ----------
+  function tick() {
+    const auto = autoTheme();
+    if (auto !== lastAutoTheme) {
+      // Crossed 07:00 or 19:00: automatic takes over again.
+      lastAutoTheme = auto;
+      manualTheme = null;
+    }
+    applyTheme();
+
+    const day = resolveDay();
+    if (day !== currentDay) {
+      root.classList.remove("animate"); // update without replaying the draw-on
+      applyDay(day);
+    }
+  }
+
+  // ---------- Quotes ----------
+  const tired = $("#tired");
+  const dialog = $("#quote-dialog");
+  const quoteText = $("#quote-text");
+  const closeBtn = $("#quote-close");
+  let quoteIndex = Math.floor(Math.random() * quotes.length);
+
+  tired.addEventListener("click", () => {
+    quoteText.textContent = quotes[quoteIndex];
+    quoteIndex = (quoteIndex + 1) % quotes.length;
+    dialog.showModal();
+    dialog.scrollTop = 0;
+  });
+
+  closeBtn.addEventListener("click", () => dialog.close());
+
+  // A click whose target is the <dialog> itself and lands outside its box is a backdrop click.
+  dialog.addEventListener("click", (event) => {
+    if (event.target !== dialog) return;
+    const r = dialog.getBoundingClientRect();
+    const inside = event.clientX >= r.left && event.clientX <= r.right &&
+                   event.clientY >= r.top && event.clientY <= r.bottom;
+    if (!inside) dialog.close();
+  });
+
+  dialog.addEventListener("close", () => tired.focus());
+
+  // ---------- Start ----------
+  applyDay(resolveDay());
+  root.setAttribute("data-theme", manualTheme || lastAutoTheme);
+  fixKerning();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fixKerning);
+  window.addEventListener("resize", fixKerning);
+
+  // The draw-on runs once; drop the class so later changes never replay it.
+  measurePens();
+  window.setTimeout(() => root.classList.remove("animate"), 1500);
+
+  window.setInterval(tick, 60 * 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") tick();
+  });
+})();
+</script>
+</body>
+</html>
